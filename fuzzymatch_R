@@ -1,0 +1,213 @@
+#install.packages("RODBC") #installs RODBC package in R
+library(RODBC) #loads RODBC library package
+#install.packages('stringdist')
+library(stringdist)
+#install.packages('caret')
+library(caret)
+#install.packages('RecordLinkage')
+library(RecordLinkage)
+#install.packages("RLBigData")
+library(RLBigData)
+#install.packages("parallel")
+library(parallel)
+#install.packages("snow")
+library(snow)
+library(xlsx)
+library(dplyr)
+
+
+#connects to Access database per specified location
+#channel <- odbcDriverConnect("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=//Users/brandonchiazza/Documents/7.0 Work/MOCS/FuzzyMatch/ReconciliationDB.accdb")
+
+#tells you what tables are accessible from the database
+#sqlTables(channel)
+
+
+#runs query on available tables in database - chose tblMainTable_2013 as example
+#source.1 <-sqlQuery(channel, paste("SELECT ", "*" ," FROM ", "PIP_Data;",sep=''))
+#source.2 <-sqlQuery(channel, paste("SELECT ", "*" ," FROM ", "[CROL Vendors with CLASS];",sep=''))
+
+#Read in data from FMS/PIP
+source.1 <- read.csv("//CHGOLDFS/Contracts/Citywide_Procurement_Innovation/SubProgram - Business and Joint/03 - User Engagement/Vendor Outreach/04 Analysis/PIP_Data.csv", header=TRUE, stringsAsFactors=FALSE)
+
+#Read in data from CROL 
+source.2 <- read.csv("//CHGOLDFS/Contracts/Citywide_Procurement_Innovation/SubProgram - Business and Joint/03 - User Engagement/Vendor Outreach/04 Analysis/CROL_Vendors_with_CLASS.csv",header=TRUE, stringsAsFactors=FALSE)
+
+
+########################################------DATA CLEANING---------#####################################
+#Combine Address columns
+source.1 <- transform(source.1,Address=paste(source.1$STR_1_NM, source.1$STR_2_NM, sep=' '))
+source.1$Address <- gsub("(.)([ ][N][A]$)","\\1",source.1$Address)
+
+#change contact to upper case
+source.1$Contact<- toupper(source.1$Contact)
+
+#Change email to default@default.com
+source.1$EMAIL_AD <- replace(source.1$EMAIL_AD, source.1$EMAIL_AD=="default@default.com", NA)
+
+#get rid of dummy emails default@default.com
+source.1$EMAIL_AD <- replace(source.1$EMAIL_AD, source.1$EMAIL_AD=="DUMMY@DUMMY.COM", NA)
+
+#Clean Phone Numbers
+source.1$VOICE_PH_NO <- gsub("[^+0-9]", "", source.1$VOICE_PH_NO) #cleans voice phone number
+source.1$FAX_PH_NO <- gsub("[^+0-9]", "", source.1$FAX_PH_NO) #cleans fax phone number
+source.2$Phone <- gsub("[^+0-9]", "", source.2$Phone) #cleans voice phone number of source 2
+
+#Cleans Date Columns
+source.1$DOC_LAST_DT <- as.Date(source.1[,c("DOC_LAST_DT")], origin="1899-12-30")
+source.2$`Date Added` <- as.Date(source.2[,c("Date Added")], origin="1899-12-30")
+
+#remove punctuation from all name and address columns
+source.1$Legal.Name <-  gsub("[[:punct:]]", "", source.1$Legal.Name) # PIP Legal Name clean up
+source.2$Vendor_Name <-  gsub("[[:punct:]]", "", source.2$Vendor_Name) # CROL Vendor Name update
+
+source.1$`STR_1_NM` <-  gsub("[[:punct:]]", "", source.1$`STR_1_NM`) # PIP address 1 clean up
+source.1$`STR_2_NM` <-  gsub("[[:punct:]]", "", source.1$`STR_2_NM`) # PIP address 2 clean up
+source.1$`Address` <-  gsub("[[:punct:]]", "", source.1$`Address`) # PIP address 2 clean up
+source.2$Address <-  gsub("[[:punct:]]", "", source.2$Address) # CROL Address update
+
+source.1$Contact <-  gsub("[[:punct:]]", "", source.1$Contact) # PIP contact clean up
+source.2$Contact <-  gsub("[[:punct:]]", "", source.2$Contact) # CROL contact clean up
+
+#clean zip code
+source.1$ZIP <-  gsub("[[:punct:]]", "", source.1$ZIP) # PIP contact clean up
+source.2$Zip <-  gsub("[[:punct:]]", "", source.2$Zip) # CROL contact clean up
+
+#Rename columns -Matches CROL col names
+colnames(source.1)[16] <- "Zip" 
+colnames(source.1)[2] <- "Vendor_Name" 
+colnames(source.1)[17] <- "Phone" 
+colnames(source.1)[10] <- "Email"
+colnames(source.1)[15] <- "State"
+
+#SUbset source files for columns that are needed
+input.1 <- source.1[,c("FMS.Vendor.Code", "MAX.Yr.OF.FMS3.DOC", "Vendor_Name", "Contact", "Email", "Phone", "Address", "Zip", "State")]
+input.2 <- source.2[,c("Vendor_Name", "Contact", "Email", "Phone", "Address", "Zip", "State")]
+
+#Order the two datasets by vendor name to allow for faster processing
+input.1 <-  input.1[order(input.1$Vendor_Name, decreasing = FALSE),]
+input.2 <-  input.2[order(input.2$Vendor_Name, decreasing = FALSE),]
+input.2 <- unique(input.2)#only identify unique rows in the reference file (input.2)
+############################END DATA CLEANING#################################
+#######################EXACT MATCH######################################
+###--Fill NAs vendor Name exact matches with those from CROL##
+input.1 <- merge(input.1,input.2, by=c("Vendor_Name"), all=TRUE)
+input.1 <- unique(input.1)s
+
+####This section updates the columns with 'NAs' to their equivalent CROL data
+for (i in 1:length(input.1$Email.x)){
+  if(is.na(input.1$Email.x[[i]])==TRUE){
+    input.1$Email.x[[i]] <- input.1$Email.y[[i]] 
+  }
+}
+
+for (i in 1:length(input.1$Address.x)){
+  if(is.na(input.1$Address.x[[i]])==TRUE){
+    input.1$Address.x[[i]] <- input.1$Address.y[[i]] 
+  }
+}
+
+
+for (i in 1:length(input.1$Contact.x)){
+  if(is.na(input.1$Contact.x[[i]])==TRUE){
+    input.1$Contact.x[[i]] <- input.1$Contact.y[[i]] 
+  }
+}
+
+for (i in 1:length(input.1$Phone.x)){
+  if(is.na(input.1$Phone.x[[i]])==TRUE){
+    input.1$Phone.x[[i]] <- input.1$Phone.y[[i]] 
+  }
+}
+
+for (i in 1:length(input.1$Zip.x)){
+  if(is.na(input.1$Zip.x[[i]])==TRUE){
+    input.1$Zip.x[[i]] <- input.1$Zip.y[[i]] 
+  }
+}
+
+for (i in 1:length(input.1$State.x)){
+  if(is.na(input.1$State.x[[i]])==TRUE){
+    input.1$State.x[[i]] <- input.1$State.y[[i]] 
+  }
+}
+
+
+input.1 <- input.1[,-c(10:15)]
+input.1 <- unique(input.1)
+colnames(input.1) <- gsub("\\.x","",colnames(input.1))
+####################################################################################################
+
+#################------RECORD LINKING---------######################################################
+ 
+cores <- 8 #sets the number of cores to maximum number of cores on your computer
+
+# initialize cluster
+cl <- makeCluster(cores, type = "SOCK")
+
+x.na = paste(input.1$Vendor_Name[is.na(input.1$Email)],input.1$Address[is.na(input.1$Email)],sep=";")
+y = paste(input.2$Vendor_Name,input.2$Address, sep=";")
+
+
+memory.limit(size=32000)#increase memory limit
+
+
+fun<- function(x.na){
+  y = paste(input.2$Vendor_Name,input.2$Address, sep=";")#subset CROL data with vendorname&Address
+  wordlist <- expand.grid(words = x.na, ref = y, stringsAsFactors = FALSE)#create 30KX40k matrix to generate match
+  result <- wordlist %>% group_by(words) %>% mutate(match_score = jarowinkler(words, ref, r=.2)) %>% summarise(match = match_score[which.max(match_score)], matched_to = ref[which.max(match_score)]) #groups by each word and identifies highest match against reference table using the jarkwinkler algorithm
+  return(result)#returns matched tables
+}
+
+
+#Split fun chunks the data by 30 table and creates seperate data frames using the fun function
+splitFun <- function(){
+  x= paste(input.1$Vendor_Name[is.na(input.1$Email)],input.1$Address[is.na(input.1$Email)],sep=";")
+  result.1 <- data.frame(matrix(ncol=3, dimnames=list(c(),c("words", "match", "matched_to"))))
+  for(i in 0:29){
+    x.na <- x[((length(x)*(i)/30)+1):((length(x)*(i+1))/30)]
+    result.1 <- rbind(result.1,fun(x.na))
+  }
+  print(result.1)
+}
+
+evalname <- clusterCall(cl, eval, splitFun()) #Eval name runs the split fun function and evaluates the function across the number of clusters defined 'cores' (8)
+stopCluster(cl)
+
+#Prepares dataset for update
+data <- as.data.frame(evalname)
+data <- data[,-c(4:12)]
+data.1<- cbind(data.frame(do.call('rbind', strsplit(as.character(data$words),';',fixed=TRUE))), match=as.numeric(data$match), data.frame(do.call('rbind', strsplit(as.character(data$matched_to),';',fixed=TRUE))))
+data.2 <- subset(data.1,match>=.865)#threshold for accepting matches
+data.3 <- merge(data.2, input.2, by.y=c("Vendor_Name", "Address"), by.x=c("X1.1", "X2.1"), all.x=TRUE, all.y=FALSE)
+data.4 <- merge(input.1, data.3, by.y=c("X1", "X2"), by.x=c("Vendor_Name", "Address"), all.x=TRUE, all.y=FALSE)
+
+
+#Update Emails from matches to FMS dataset
+for (i in 1:length(data.4$Email.x)){
+  if(is.na(data.4$Email.x[[i]])==TRUE){
+    data.4$Email.x[[i]] <- data.4$Email.y[[i]] 
+  }
+}
+
+#Trim dataset and update column names
+input.1 <- data.4[,-c(9:17)]
+colnames(input.1) <- gsub("\\.x","",colnames(input.1))
+dim(input.1)
+
+input.1 <- unique(input.1)
+
+#data.4[data.4$Vendor_Name=="123 CONTRACTING LLC",] = TEST CASE
+#Export of match
+write.csv(input.1,"//CHGOLDFS/Contracts/Citywide_Procurement_Innovation/SubProgram - Business and Joint/03 - User Engagement/Vendor Outreach/04 Analysis/output.1.csv")
+
+
+
+
+
+
+
+
+
+
+
