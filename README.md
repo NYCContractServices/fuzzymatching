@@ -7,8 +7,9 @@ Use the Jaro-Winkler edit distance algorithm to calculate each row in the index(
 <a href="https://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance">Jaro-Winkler Distance</a> (Winkler, 1990) is "a measure of similarity between two strings. It is a variant of the Jaro distance metric (Jaro, 1989, 1995), a type of string edit distance, and was developed in the area of record linkage (duplicate detection) (Winkler, 1990). The higher the Jaro–Winkler distance for two strings is, the more similar the strings are. The Jaro-Winkler similarity (for equation see below) is given by 1 - Jaro Winkler distance. The Jaro–Winkler distance metric is designed and best suited for short strings such as person names. The score is normalized such that 0 equates to no similarity and 1 is an exact match."
 
 Jaro-Winkler Distance Formula:
+<br>
 ![alt tag](https://www.safaribooksonline.com/library/view/haskell-data-analysis/9781783286331/graphics/6331OS_03_03.jpg)
-
+<br>
 
 
 
