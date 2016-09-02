@@ -16,22 +16,11 @@ library(xlsx)
 library(dplyr)
 
 
-#connects to Access database per specified location
-#channel <- odbcDriverConnect("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=//Users/brandonchiazza/Documents/7.0 Work/MOCS/FuzzyMatch/ReconciliationDB.accdb")
+#Read in data from FMS/PIP (index)
+source.1 <- read.csv(file.choose(), header=TRUE, stringsAsFactors=FALSE)
 
-#tells you what tables are accessible from the database
-#sqlTables(channel)
-
-
-#runs query on available tables in database - chose tblMainTable_2013 as example
-#source.1 <-sqlQuery(channel, paste("SELECT ", "*" ," FROM ", "PIP_Data;",sep=''))
-#source.2 <-sqlQuery(channel, paste("SELECT ", "*" ," FROM ", "[CROL Vendors with CLASS];",sep=''))
-
-#Read in data from FMS/PIP
-source.1 <- read.csv("//CHGOLDFS/Contracts/Citywide_Procurement_Innovation/SubProgram - Business and Joint/03 - User Engagement/Vendor Outreach/04 Analysis/PIP_Data.csv", header=TRUE, stringsAsFactors=FALSE)
-
-#Read in data from CROL 
-source.2 <- read.csv("//CHGOLDFS/Contracts/Citywide_Procurement_Innovation/SubProgram - Business and Joint/03 - User Engagement/Vendor Outreach/04 Analysis/CROL_Vendors_with_CLASS.csv",header=TRUE, stringsAsFactors=FALSE)
+#Read in data from CROL (reference)
+source.2 <- read.csv(file.choose(),header=TRUE, stringsAsFactors=FALSE)
 
 
 ########################################------DATA CLEANING---------#####################################
