@@ -1,16 +1,10 @@
-#install.packages("RODBC") #installs RODBC package in R
+#Author: Brandon Chiazza
 library(RODBC) #loads RODBC library package
-#install.packages('stringdist')
 library(stringdist)
-#install.packages('caret')
 library(caret)
-#install.packages('RecordLinkage')
 library(RecordLinkage)
-#install.packages("RLBigData")
 library(RLBigData)
-#install.packages("parallel")
 library(parallel)
-#install.packages("snow")
 library(snow)
 library(xlsx)
 library(dplyr)
