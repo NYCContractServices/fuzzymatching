@@ -23,7 +23,10 @@ In the data set, the City's Financial Management System (FMS) has a number of ve
 
 The City also collects information from the City Record Online (CROL) which also contains information on vendors per above. No vendor code or TIN is collected and is the need for the match. 
 
+The source file is fuzzymatching_R.R, which is the file that address the above approach. 
 
+##Data Definitions and Sources of Data Explained
+[TO BE ADDED] 
 ##Jaro-Winkler Formula in R
 ```
 function (str1, str2, W_1 = 1/3, W_2 = 1/3, W_3 = 1/3, r = 0.5) 
