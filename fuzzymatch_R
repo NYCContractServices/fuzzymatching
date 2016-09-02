@@ -188,7 +188,8 @@ input.1 <- unique(input.1)
 
 #data.4[data.4$Vendor_Name=="123 CONTRACTING LLC",] = TEST CASE
 #Export of match
-write.csv(input.1,"//CHGOLDFS/Contracts/Citywide_Procurement_Innovation/SubProgram - Business and Joint/03 - User Engagement/Vendor Outreach/04 Analysis/output.1.csv")
+path_output <-"[definefilepath].csv"
+write.csv(input.1,path_output)
 
 
 
