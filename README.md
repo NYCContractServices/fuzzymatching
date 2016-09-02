@@ -18,14 +18,14 @@ The match is approximately a 30,000 row dataset (2 columns) X 40,000 row dataset
 ##Results
 To match the index row to the entire reference row and calculate the edit distance between the two match. Then, to order the match from highest to lowest. The best match was chosen at .865 edit distance or above. Note: Jaro-WInkler is slightly different that the Levensthein Distance in that it returns a number out of the total potential match, meaning that a higher percentage results in a closer match; whereas, a higher Levenstein Distance results in a worse match. 
 
-##Data Sources and Definitions:
+##Data Explained:
 In the data set, the City's Financial Management System (FMS) has a number of vendors in its system with associated contact information such as business name, address, vendor code, TIN, email address, etc. This datasource is viewed as the <b>index</b> data source. 
 
 The City also collects information from the City Record Online (CROL) which also contains information on vendors per above. No vendor code or TIN is collected and is the need for the match. 
 
 The source file is fuzzymatching_R.R, which is the file that address the above approach. 
 
-##Data Definitions and Sources of Data Explained
+##Data Definitions:
 [TO BE ADDED] 
 ##Jaro-Winkler Formula in R
 ```
