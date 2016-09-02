@@ -13,7 +13,7 @@ Jaro-Winkler Distance Formula:
 
 
 ##Processing: 
-The match is approximately a 30,000 row dataset (2 columns) X 40,000 row dataset CROL (2 columns). Because each row of the index dataset is matched against the reference set. This was conducted on a x64 bit computer, 8 cores, with 16GBs of RAM. The initial run was slow, so the data was chucnked and clustered to increase processing time. 
+The match is approximately a 30,000 row dataset (2 columns) X 40,000 row dataset CROL (2 columns). Because each row of the index dataset is matched against the reference set. This was conducted on a x64 bit computer, 8 cores, with 16GBs of RAM. The initial run was slow, so the data was chucnked and clustered to increase processing speed. 
 
 ##Results
 To match the index row to the entire reference row and calculate the edit distance between the two match. Then, to order the match from highest to lowest. The best match was chosen at .865 edit distance or above. Note: Jaro-WInkler is slightly different that the Levensthein Distance in that it returns a number out of the total potential match, meaning that a higher percentage results in a closer match; whereas, a higher Levenstein Distance results in a worse match. 
